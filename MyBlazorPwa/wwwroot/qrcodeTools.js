@@ -7,7 +7,7 @@
 let html5QrCode = undefined;
 let targetElementId = undefined;
 
-export async function scanQrCodeAsync(elementId, dotNetObject) {
+export function scanQrCode(dotNetObject, elementId, f_readStop) {
   try {
     //# 建立掃描物件，只掃QR Code而已。hidden
     targetElementId = elementId;
@@ -23,11 +23,17 @@ export async function scanQrCodeAsync(elementId, dotNetObject) {
       },
       qrCodeMessage => {
         //console.info('Code is read', qrCodeMessage);
+
+        if (f_readStop) {
+          html5QrCode.stop();
+          document.getElementById(elementId).style.visibility = 'hidden';
+        }
+
         dotNetObject.invokeMethodAsync('OnScanResponse', 'SUCCESS', qrCodeMessage);
       },
       errorMessage => {
         //console.warn('Parse error, ignore it.', errorMessage);
-        dotNetObject.invokeMethodAsync('OnScanResponse', 'WARN', 'Parse error. ' + errorMessage);
+        dotNetObject.invokeMethodAsync('OnScanResponse', 'WARN', errorMessage);
       }
     ).catch(err => {
       //console.error('Start failed, handle it.', err);
@@ -35,21 +41,19 @@ export async function scanQrCodeAsync(elementId, dotNetObject) {
     });
   }
   catch (err) {
-    console.error('scanQrCodeAsync Exception!', err);
+    console.error('scanQrCode Exception!', err);
     dotNetObject.invokeMethodAsync('OnScanResponse', 'EXCEPTION', 'scanQrCode Exception! ' + JSON.stringify(err));
   }
 }
 
-export async function stopScanAsync(dotNetObject) {
-  try {
-    await html5QrCode.stop();
+export function stopScan(dotNetObject) {
+  html5QrCode.stop().then((ignore) => {
     // QR Code scanning is stopped.
     dotNetObject.invokeMethodAsync('OnScanResponse', 'STOP', 'QR Code scanning is stopped.');
     document.getElementById(targetElementId).style.visibility = 'hidden';
-  }
-  catch (err) {
+  }).catch((err) => {
     // Stop failed, handle it.
-    console.error('stopQrCodeAsync Exception!', err);
+    console.error('stopScan Exception!', err);
     dotNetObject.invokeMethodAsync('OnScanResponse', 'ERROR', 'Stop failed! ' + JSON.stringify(err));
-  }
+  });
 }
