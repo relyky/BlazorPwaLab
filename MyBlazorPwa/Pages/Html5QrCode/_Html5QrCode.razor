@@ -1,0 +1,51 @@
+﻿@page "/html5qrcode"
+
+<h3>Html5QrCode.v2</h3>
+<button @onclick="HandleScanQrCode">掃描QR Code</button>
+<div id="reader" width="600px" height="600px" style="border:solid 1px black; width:600px; max-width:80vw;"></div>
+
+<p>qrCode(@scanCount):@qrCode</p>
+<p>warnMsg(@warnCount):@warnMsg</p>
+<p>errorMsg(@errorCount):@errorMsg</p>
+
+@code{
+
+    [Inject] IJSRuntime jsr { get; init; }
+
+    #region State
+    string qrCode = null;
+    int scanCount = 0;
+    string warnMsg = null;
+    int warnCount = 0;
+    string errorMsg = null;
+    int errorCount = 0;
+    #endregion
+
+    async void HandleScanQrCode()
+    {
+        await jsr.InvokeVoidAsync("scanQrCodeAsync", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public Task<int> OnScanResponse(string type, string message)
+    {
+        switch (type)
+        {
+            case "SUCCESS":
+                qrCode = message;
+                scanCount++;
+                break;
+            case "WARN":
+                warnMsg = message;
+                warnCount++;
+                break;
+            default:
+                errorMsg = message;
+                errorCount++;
+                break;
+        }
+
+        StateHasChanged();
+        return Task.FromResult(0);
+    }
+}
