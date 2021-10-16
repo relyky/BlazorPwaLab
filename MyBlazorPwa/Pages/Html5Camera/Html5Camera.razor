@@ -36,7 +36,7 @@
         await base.OnAfterRenderAsync(firstRender);
 
         // 動態載入 JS module
-        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./cameraTools.js");
+        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/cameraTools.js");
         dotNetObject = DotNetObjectReference.Create(this);
     }
 

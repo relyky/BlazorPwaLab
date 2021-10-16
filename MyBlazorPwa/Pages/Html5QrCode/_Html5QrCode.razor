@@ -41,7 +41,7 @@
         await base.OnAfterRenderAsync(firstRender);
 
         // 動態載入 JS module
-        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./qrcodeTools.js");
+        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/qrcodeTools.js");
     }
 
     async void HandleScanQrCode()

@@ -1,0 +1,97 @@
+﻿@page "/notifydemo"
+
+<h3>Notification Demo.v1.1</h3>
+<dl>
+    <dt>supportInfo</dt>
+    <dd>@supportInfo.ToJson()</dd>
+</dl>
+<hr />
+<button class="btn btn-primary" @onclick="HandleNotify">通知自己</button>
+
+<p>@result</p>
+
+@code{
+    [Inject] IJSRuntime jsr { get; init; }
+
+    #region Resource
+    IJSObjectReference module;
+
+    class FcmPushInfo
+    {
+        public string title { get; set; }
+        public string body { get; set; }
+        public string url { get; set; }
+        public string imageUrl { get; set; }
+    }
+
+    #endregion
+
+    #region State
+    object supportInfo = null;
+    string result = null;
+    bool f_Loading = false;
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            try
+            {
+                f_Loading = true;
+                StateHasChanged();
+                await Task.Delay(500); // 跑太快了拉長一點時間
+
+                // 動態載入 JS module
+                module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/swTools.js");
+
+                // 檢查環境
+                supportInfo = await module.InvokeAsync<object>("checkSupport");
+            }
+            finally
+            {
+                f_Loading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    async Task HandleNotify()
+    {
+        try
+        {
+            f_Loading = true;
+            StateHasChanged();
+            await Task.Delay(500); // 跑太快了拉長一點時間
+
+            await module.InvokeVoidAsync("SendNotification");
+            result = "SUCCESS";
+        }
+        catch (Exception ex)
+        {
+            result = ex.ToString();
+        }
+        finally
+        {
+            f_Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task HandleAddNotice()
+    {
+
+    }
+
+    async Task HandleQueryNotice()
+    {
+
+    }
+
+    async Task HandleClearAllNotice()
+    {
+
+    }
+
+}
