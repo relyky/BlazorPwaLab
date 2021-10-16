@@ -100,12 +100,12 @@
     }
 
     [JSInvokable]
-    public Task<int> OnQueryResponse(string dataType, List<FcmPushInfo> resultList)
+    public Task<int> OnQueryResponse(string dataType, System.Text.Json.JsonElement resultList)
     {
         switch (dataType)
         {
             case "Notice":
-                dataList = resultList;
+                dataList = resultList.ToObject<List<FcmPushInfo>>();
                 break;
             default:
                 message = $"dataType: {dataType}, {resultList.ToString()}";
