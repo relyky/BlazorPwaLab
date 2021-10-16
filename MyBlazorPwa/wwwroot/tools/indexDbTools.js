@@ -31,34 +31,7 @@ export function qryNotice(dotNetObject, args) {
   };
 }
 
-//export function qryNotice(args) {
-//  const resultList = [];
-//
-//  const request = indexedDB.open(DB_NAME, 1);
-//
-//  request.onerror = function (event) {
-//    console.error('open indexedDB fail!', event);
-//  };
-//
-//  request.onupgradeneeded = HandleUpgradeNeeded;
-//
-//  request.onsuccess = function (event) {
-//    const db = request.result;
-//
-//    const objectStore = db.transaction("Notice").objectStore("Notice");
-//
-//    objectStore.openCursor().onsuccess = function (event) {
-//      var cursor = event.target.result;
-//      if (cursor) {
-//        resultList.push(cursor.value);
-//        cursor.continue();
-//      }
-//      else {
-//        console.log('Got all items', resultList);
-//      }
-//    };
-//  };
-//}
+//----------------------------------------------------------
 
 class FcmPushInfo {
   constructor(title, body, url, imageUrl) {
