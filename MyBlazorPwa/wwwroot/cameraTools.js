@@ -13,14 +13,15 @@ const IMAGE_TYPES = JslibHtml5CameraPhoto.IMAGE_TYPES;
 
 let cameraPhoto = undefined;
 
-export function startCamera(dotNetObject, videoElementId) {
+export function startCamera(dotNetObject, videoElement) {
 
-  const videoElement = document.getElementById(videoElementId);
+  //const videoElement = document.getElementById(videoElementId);
   cameraPhoto = new JslibHtml5CameraPhoto.default(videoElement);
 
-  cameraPhoto.startCamera(FACING_MODES.ENVIRONMENT, {})
+  //startCamera
+  cameraPhoto.startCameraMaxResolution(FACING_MODES.ENVIRONMENT, {})
     .then((stream) => {
-      console.log('Camera started.', stream);
+      console.log('Camera started.');
       dotNetObject.invokeMethodAsync('OnCameraResponse', 'SUCCESS', 'Camera started.');
     })
     .catch(err => {
