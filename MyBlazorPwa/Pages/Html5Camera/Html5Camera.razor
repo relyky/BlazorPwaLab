@@ -1,0 +1,41 @@
+﻿@page "/html5camera"
+
+
+<h3>Html5Camera.v1</h3>
+<button @onclick="HandleStartCamera">啟動攝影機</button>
+
+<!-- needed to by the camera stream -->
+<video id="videoId" autoplay></video>
+
+<!-- needed if you want to display the image when you take a photo -->
+<img alt="imgId" id="imgId">
+
+<!--buttons to trigger the actions -->
+<button id="takePhotoButtonId">takePhoto</button>
+<button id="stopCameraButtonId">stopCamera</button>
+
+@code{
+    [Inject] IJSRuntime jsr { get; init; }
+
+    #region Resource
+    IJSObjectReference module;
+    #endregion
+
+    #region State
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        // 動態載入 JS module
+        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./cameraTools.js");
+    }
+
+    async Task HandleStartCamera()
+    {
+        await module.InvokeVoidAsync("startCamera", DotNetObjectReference.Create(this));
+    }
+
+}
