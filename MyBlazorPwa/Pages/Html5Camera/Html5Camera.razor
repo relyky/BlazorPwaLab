@@ -1,18 +1,16 @@
 ﻿@page "/html5camera"
 
-<h3>Html5Camera.v2.1.1</h3>
+<h3>Html5Camera.v3.0</h3>
 <button @onclick="HandleStartCamera">啟動攝影機</button>
 <button @onclick="HandleStopCamera">停止</button>
-
-@* buttons to trigger the actions *@
-<br />
-<button @onclick="HandleTakePhoto">照像</button>
 <p>message: @message</p>
 
 @* needed to by the camera stream *@
-<div class="d-block">
-    <video @ref="videoElement" autoplay muted webkit-playsinline playsinline
-           style="border:solid 1px darkgrey; background-color:lightgrey; padding:4px; margin: 4px; border-radius: 4px;"></video>
+<div class="@(f_openCamera ? "d-block" : "d-none") text-center" style="width:600px; max-width:90vw; margin:auto;">
+    <video @ref="videoElement" style="width:100%; background-color:grey;" autoplay muted webkit-playsinline playsinline></video>
+    <button class="btn btn-info" style="position:relative; bottom:50px; border-radius:50%;" @onclick="HandleTakePhoto">
+        <span class="oi oi-camera-slr"></span>
+    </button>
 </div>
 
 @* needed if you want to display the image when you take a photo *@
@@ -30,6 +28,7 @@
     #region State
     string photoDataUri = null;
     string message = null;
+    bool f_openCamera = false;
     #endregion
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -43,12 +42,14 @@
 
     async Task HandleStartCamera()
     {
+        f_openCamera = true;
         await module.InvokeVoidAsync("startCamera", dotNetObject, videoElement);
     }
 
     async Task HandleStopCamera()
     {
         await module.InvokeVoidAsync("stopCamera", dotNetObject);
+        f_openCamera = false;
     }
 
     async Task HandleTakePhoto()
@@ -69,6 +70,8 @@
                 break;
             case "PHOTO":
                 photoDataUri = _message;
+                module.InvokeVoidAsync("stopCamera", dotNetObject);
+                f_openCamera = false;
                 break;
             default:
                 message = _message;
