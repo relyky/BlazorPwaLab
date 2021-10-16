@@ -7,14 +7,22 @@
 </dl>
 <hr />
 <button class="btn btn-primary" @onclick="HandleNotify">通知自己</button>
+<button class="btn btn-primary" @onclick="HandleQueryNotice">取出 Notice</button>
 
-<p>@result</p>
+<hr />
+<h4>dataList</h4>
+<p>@dataList.ToJson()</p>
+
+<hr />
+<h4>message</h4>
+<p>@message</p>
 
 @code{
     [Inject] IJSRuntime jsr { get; init; }
 
     #region Resource
     IJSObjectReference module;
+    IJSObjectReference swModule;
 
     class FcmPushInfo
     {
@@ -28,7 +36,8 @@
 
     #region State
     object supportInfo = null;
-    string result = null;
+    object dataList = null;
+    string message = null;
     bool f_Loading = false;
     #endregion
 
@@ -44,10 +53,11 @@
                 await Task.Delay(500); // 跑太快了拉長一點時間
 
                 // 動態載入 JS module
-                module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/swTools.js");
+                module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/indexDbTools.js");
+                swModule = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/swTools.js");
 
                 // 檢查環境
-                supportInfo = await module.InvokeAsync<object>("checkSupport");
+                supportInfo = await swModule.InvokeAsync<object>("checkSupport");
             }
             finally
             {
@@ -66,11 +76,11 @@
             await Task.Delay(500); // 跑太快了拉長一點時間
 
             await module.InvokeVoidAsync("SendNotification");
-            result = "SUCCESS";
+            message = "SUCCESS";
         }
         catch (Exception ex)
         {
-            result = ex.ToString();
+            message = ex.ToString();
         }
         finally
         {
@@ -84,9 +94,26 @@
 
     }
 
-    async Task HandleQueryNotice()
+    void HandleQueryNotice()
     {
+        module.InvokeVoidAsync("qryNotice", DotNetObjectReference.Create(this));
+    }
 
+    [JSInvokable]
+    public Task<int> OnQueryResponse(string dataType, object resultList)
+    {
+        switch (dataType)
+        {
+            case "Notice":
+                dataList = resultList;
+                break;
+            default:
+                message = $"dataType: {dataType}, {resultList.ToString()}";
+                break;
+        }
+
+        StateHasChanged();
+        return Task.FromResult(0);
     }
 
     async Task HandleClearAllNotice()
