@@ -1,28 +1,32 @@
 ﻿@page "/html5camera"
 
-
-<h3>Html5Camera.v1</h3>
+<h3>Html5Camera.v2</h3>
 <button @onclick="HandleStartCamera">啟動攝影機</button>
+<button @onclick="HandleStopCamera">停止</button>
 
-<!-- needed to by the camera stream -->
-<video id="videoId" autoplay></video>
+@* buttons to trigger the actions *@
+<br />
+<button @onclick="HandleTakePhoto">照像</button>
+<p>message: @message</p>
 
-<!-- needed if you want to display the image when you take a photo -->
-<img alt="imgId" id="imgId">
+@* needed to by the camera stream *@
+<video id="videoId" autoplay 
+    style="border:solid 1px darkgrey; background-color:lightgrey; padding:4px; margin: 4px; border-radius: 4px;" />
 
-<!--buttons to trigger the actions -->
-<button id="takePhotoButtonId">takePhoto</button>
-<button id="stopCameraButtonId">stopCamera</button>
+@* needed if you want to display the image when you take a photo *@
+<img alt="photo picture" src="@photoDataUri">
 
 @code{
     [Inject] IJSRuntime jsr { get; init; }
 
     #region Resource
     IJSObjectReference module;
+    DotNetObjectReference<Html5Camera> dotNetObject;
     #endregion
 
     #region State
-
+    string photoDataUri = null;
+    string message = null;
     #endregion
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -31,11 +35,44 @@
 
         // 動態載入 JS module
         module = await jsr.InvokeAsync<IJSObjectReference>("import", "./cameraTools.js");
+        dotNetObject = DotNetObjectReference.Create(this);
     }
 
     async Task HandleStartCamera()
     {
-        await module.InvokeVoidAsync("startCamera", DotNetObjectReference.Create(this));
+        await module.InvokeVoidAsync("startCamera", dotNetObject, "videoId");
     }
 
+    async Task HandleStopCamera()
+    {
+        await module.InvokeVoidAsync("stopCamera", dotNetObject);
+    }
+
+    async Task HandleTakePhoto()
+    {
+        await module.InvokeVoidAsync("takePhoto", dotNetObject);
+    }
+
+    [JSInvokable]
+    public Task<int> OnCameraResponse(string type, string _message)
+    {
+        switch (type)
+        {
+            case "SUCCESS":
+                message = _message;
+                break;
+            case "STOP":
+                message = _message;
+                break;
+            case "PHOTO":
+                photoDataUri = _message;
+                break;
+            default:
+                message = _message;
+                break;
+        }
+
+        StateHasChanged();
+        return Task.FromResult(0);
+    }
 }
