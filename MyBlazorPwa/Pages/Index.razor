@@ -8,6 +8,8 @@ Welcome to your new app.
 
 <Component1 />
 
+
+<input @bind="args" />
 <button @onclick="HandleClickMe">click me</button>
 <p>@message</p>
 
@@ -19,6 +21,7 @@ Welcome to your new app.
     #endregion
 
     #region State
+    string args = "我二秒後就出運了。";
     string message = null;
     #endregion
 
@@ -30,7 +33,14 @@ Welcome to your new app.
 
     async Task HandleClickMe()
     {
-        message = await exJsr.Prompt("show me the money.");
+        try
+        {
+            message = await exJsr.CallPromise(args);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
     }
 
 }

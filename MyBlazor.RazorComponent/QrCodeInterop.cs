@@ -11,22 +11,15 @@ namespace MyBlazor.RazorComponent
     // This class can be registered as scoped DI service and then injected into Blazor
     // components for use.
 
-    public class ExampleJsInterop : IAsyncDisposable
+    public class QrCodeInterop : IAsyncDisposable
     {
         private readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
-        public ExampleJsInterop(IJSRuntime jsRuntime)
+        public QrCodeInterop(IJSRuntime jsRuntime)
         {
             moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
-               "import", "./_content/MyBlazor.RazorComponent/exampleJsInterop.js").AsTask());
+               "import", "./_content/MyBlazor.RazorComponent/tools/qrcodeTools.js").AsTask());
         }
-
-        public async ValueTask<string> CallPromise(string message)
-        {
-            var module = await moduleTask.Value;
-            return await module.InvokeAsync<string>("callPromise", message);
-        }
-
 
         public async ValueTask<string> Prompt(string message)
         {
