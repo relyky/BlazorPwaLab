@@ -24,6 +24,7 @@
 
     #region Resource
     IJSObjectReference module;
+    MyBlazor.RazorComponent.QrCodeInterop jsrQrCode;
     #endregion
 
     #region State
@@ -42,6 +43,7 @@
 
         // 動態載入 JS module
         module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/qrcodeTools.js");
+        jsrQrCode = new QrCodeInterop(jsr);
     }
 
     async void HandleScanQrCode()
@@ -50,10 +52,12 @@
         await module.InvokeVoidAsync("scanQrCode", DotNetObjectReference.Create(this), "qrcodeReader", f_readStop);
     }
 
-    async void HandleScanQrCodeOnce()
+    async Task HandleScanQrCodeOnce()
     {
         scanCount = warnCount = errorCount = 0;
-        await module.InvokeVoidAsync("scanQrCodeOnce", DotNetObjectReference.Create(this), "qrcodeReader");
+        //await module.InvokeVoidAsync("scanQrCodeOnce", DotNetObjectReference.Create(this), "qrcodeReader");
+
+        qrCode = await jsrQrCode.ScanQrCodeOnce("qrcodeReader");
     }
 
     async void HandleStopScan()

@@ -66,8 +66,11 @@ export function stopScan(dotNetObject) {
 }
 
 /// 掃描 QR code 後立刻停止
-export function scanQrCodeOnce(dotNetObject, elementId) {
-  try {
+/// return string; QR code.
+export async function scanQrCodeOnce(elementId) {
+  return await Promise.resolve(new Promise((resolve, reject) => {
+    //#region 轉換成 Promise 形式以處理非同步計算。
+
     //# 建立掃描物件，只掃QR Code而已。
     const targetElement = document.getElementById(elementId);
     targetElement.style.visibility = 'visible';
@@ -81,26 +84,64 @@ export function scanQrCodeOnce(dotNetObject, elementId) {
         qrbox: 250  // Optional if you want bounded box UI
       },
       qrCodeMessage => {
-        //console.info('Code is read', qrCodeMessage);
+        // console.log('Code is read', qrCodeMessage);
 
-        // when read code then stop immediately.
+        //# when read code then stop immediately.
         html5QrCode.stop();
         targetElement.style.visibility = 'hidden';
 
-        // send the scan code return
-        dotNetObject.invokeMethodAsync('OnScanResponse', 'SUCCESS', qrCodeMessage);
+        // return the scan code
+        resolve(qrCodeMessage);
       },
       errorMessage => {
-        //console.warn('Parse error, ignore it.', errorMessage);
-        dotNetObject.invokeMethodAsync('OnScanResponse', 'WARN', errorMessage);
+        // console.warn('Parse error, ignore it.', errorMessage);
       }
     ).catch(err => {
-      //console.error('Start failed, handle it.', err);
-      dotNetObject.invokeMethodAsync('OnScanResponse', 'ERROR', 'Start failed! ' + JSON.stringify(err));
+      console.error('Start failed, handle it.', err);
+      throw new Error('啟動掃描 QR Code 失敗！');
     });
-  }
-  catch (err) {
-    //console.error('scanQrCode Exception!', err);
-    dotNetObject.invokeMethodAsync('OnScanResponse', 'EXCEPTION', 'scanQrCode Exception! ' + JSON.stringify(err));
-  }
+
+    //#endregion ------ 轉換成 Promise 形式以處理非同步計算。
+  }));
 }
+
+
+///// 掃描 QR code 後立刻停止
+//export function scanQrCodeOnce(dotNetObject, elementId) {
+//  try {
+//    //# 建立掃描物件，只掃QR Code而已。
+//    const targetElement = document.getElementById(elementId);
+//    targetElement.style.visibility = 'visible';
+//    const html5QrCode = new Html5Qrcode(elementId, { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] });
+//
+//    //# 開始掃描 QR code
+//    html5QrCode.start(
+//      { facingMode: "environment" }, // to prefer back camera
+//      {
+//        fps: 10,    // Optional frame per seconds for qr code scanning
+//        qrbox: 250  // Optional if you want bounded box UI
+//      },
+//      qrCodeMessage => {
+//        //console.info('Code is read', qrCodeMessage);
+//
+//        // when read code then stop immediately.
+//        html5QrCode.stop();
+//        targetElement.style.visibility = 'hidden';
+//
+//        // send the scan code return
+//        dotNetObject.invokeMethodAsync('OnScanResponse', 'SUCCESS', qrCodeMessage);
+//      },
+//      errorMessage => {
+//        //console.warn('Parse error, ignore it.', errorMessage);
+//        dotNetObject.invokeMethodAsync('OnScanResponse', 'WARN', errorMessage);
+//      }
+//    ).catch(err => {
+//      //console.error('Start failed, handle it.', err);
+//      dotNetObject.invokeMethodAsync('OnScanResponse', 'ERROR', 'Start failed! ' + JSON.stringify(err));
+//    });
+//  }
+//  catch (err) {
+//    //console.error('scanQrCode Exception!', err);
+//    dotNetObject.invokeMethodAsync('OnScanResponse', 'EXCEPTION', 'scanQrCode Exception! ' + JSON.stringify(err));
+//  }
+//}

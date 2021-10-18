@@ -21,10 +21,10 @@ namespace MyBlazor.RazorComponent
                "import", "./_content/MyBlazor.RazorComponent/tools/qrcodeTools.js").AsTask());
         }
 
-        public async ValueTask<string> Prompt(string message)
+        public async ValueTask<string> ScanQrCodeOnce(string elementId)
         {
             var module = await moduleTask.Value;
-            return await module.InvokeAsync<string>("showPrompt", message);
+            return await module.InvokeAsync<string>("scanQrCodeOnce", elementId);
         }
 
         public async ValueTask DisposeAsync()
