@@ -5,3 +5,32 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+<Component1 />
+
+<button @onclick="HandleClickMe">click me</button>
+<p>@message</p>
+
+@code{
+    [Inject] IJSRuntime jsr { get; init; }
+
+    #region Resource
+    ExampleJsInterop exJsr;
+    #endregion
+
+    #region State
+    string message = null;
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        exJsr = new ExampleJsInterop(jsr);
+    }
+
+    async Task HandleClickMe()
+    {
+        message = await exJsr.Prompt("show me the money.");
+    }
+
+}
