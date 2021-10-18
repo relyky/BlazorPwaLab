@@ -11,7 +11,7 @@
 
 <button @onclick="HandleScanQrCodeOnce">掃描QR Code</button>
 
-<div style="width:600px; max-width:80vw; border:solid 1px darkgrey; background-color:lightgrey; padding:4px; margin: 8px 0; border-radius: 4px;">
+<div style="width:600px; max-width:80vw; border:solid 1px darkgrey; background-color:lightgrey; padding:4px; margin: 8px auto; border-radius: 4px;">
     <div id="qrcodeReader" style="visibility:hidden"></div>
 </div>
 
@@ -23,7 +23,7 @@
     [Inject] IJSRuntime jsr { get; init; }
 
     #region Resource
-    IJSObjectReference module;
+    //IJSObjectReference module;
     MyBlazor.RazorComponent.QrCodeInterop jsrQrCode;
     #endregion
 
@@ -42,50 +42,46 @@
         await base.OnAfterRenderAsync(firstRender);
 
         // 動態載入 JS module
-        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/qrcodeTools.js");
         jsrQrCode = new QrCodeInterop(jsr);
-    }
-
-    async void HandleScanQrCode()
-    {
-        scanCount = warnCount = errorCount = 0;
-        await module.InvokeVoidAsync("scanQrCode", DotNetObjectReference.Create(this), "qrcodeReader", f_readStop);
+        jsrQrCode.OnScanResponseEvnet += HandleScanResponse;
     }
 
     async Task HandleScanQrCodeOnce()
     {
         scanCount = warnCount = errorCount = 0;
-        //await module.InvokeVoidAsync("scanQrCodeOnce", DotNetObjectReference.Create(this), "qrcodeReader");
-
         qrCode = await jsrQrCode.ScanQrCodeOnce("qrcodeReader");
     }
 
-    async void HandleStopScan()
+    async void HandleScanQrCode()
     {
-        await module.InvokeVoidAsync("stopScan", DotNetObjectReference.Create(this));
+        scanCount = warnCount = errorCount = 0;
+        await jsrQrCode.ScanQrCodeAsync("qrcodeReader", f_readStop);
     }
 
-    [JSInvokable]
-    public Task<int> OnScanResponse(string type, string message)
+    async Task HandleStopScan()
     {
-        switch (type)
+        await jsrQrCode.StopScanAsync();
+    }
+
+    void HandleScanResponse(object sender, QrCodeInterop.ScanResponseEvnetArgs args)
+    {
+        switch (args.type)
         {
             case "SUCCESS":
-                qrCode = message;
+                qrCode = args.message;
                 scanCount++;
                 break;
             case "WARN":
             case "STOP":
-                warnMsg = message;
+                warnMsg = args.message;
                 warnCount++;
                 break;
             default:
-                errorMsg = message;
+                errorMsg = args.message;
                 errorCount++;
                 break;
         }
 
         StateHasChanged();
-        return Task.FromResult(0);
     }
 }

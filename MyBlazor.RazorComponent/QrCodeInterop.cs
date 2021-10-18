@@ -21,12 +21,9 @@ namespace MyBlazor.RazorComponent
                "import", "./_content/MyBlazor.RazorComponent/tools/qrcodeTools.js").AsTask());
         }
 
-        public async ValueTask<string> ScanQrCodeOnce(string elementId)
-        {
-            var module = await moduleTask.Value;
-            return await module.InvokeAsync<string>("scanQrCodeOnce", elementId);
-        }
+        public event EventHandler<ScanResponseEvnetArgs> OnScanResponseEvnet;
 
+        #region Dispose
         public async ValueTask DisposeAsync()
         {
             if (moduleTask.IsValueCreated)
@@ -34,6 +31,43 @@ namespace MyBlazor.RazorComponent
                 var module = await moduleTask.Value;
                 await module.DisposeAsync();
             }
+        }
+        #endregion
+
+        public async ValueTask<string> ScanQrCodeOnce(string elementId)
+        {
+            var module = await moduleTask.Value;
+            return await module.InvokeAsync<string>("scanQrCodeOnce", elementId);
+        }
+
+        public async Task ScanQrCodeAsync(string elementId, bool f_readStop)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeVoidAsync("scanQrCode", DotNetObjectReference.Create(this), elementId, f_readStop);
+        }
+
+        public async Task StopScanAsync()
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeVoidAsync("stopScan", DotNetObjectReference.Create(this));
+        }
+
+        [JSInvokable]
+        public Task<int> OnScanResponse(string type, string message)
+        {
+            OnScanResponseEvnet.Invoke(this, new ScanResponseEvnetArgs
+            {
+                type = type,
+                message = message
+            });
+
+            return Task.FromResult(0);
+        }
+
+        public class ScanResponseEvnetArgs : EventArgs
+        {
+            public string type;
+            public string message;
         }
     }
 }
