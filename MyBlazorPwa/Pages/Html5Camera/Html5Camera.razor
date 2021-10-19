@@ -6,7 +6,7 @@
 <p>message: @message</p>
 
 @* needed to by the camera stream *@
-<div class="@(f_openCamera ? "d-block" : "d-none") text-center" style="width:600px; max-width:90vw; margin:auto;">
+<div class="@(jsrCamera.IsOpen ? "d-block" : "d-none") text-center" style="width:600px; max-width:90vw; margin:auto;">
     <video @ref="videoElement" style="width:100%; background-color:grey;" autoplay muted webkit-playsinline playsinline></video>
     <button class="btn btn-info" style="position:relative; bottom:50px; border-radius:50%;" @onclick="HandleTakePhoto">
         <span class="oi oi-camera-slr"></span>
@@ -17,68 +17,61 @@
 <img alt="photo picture" src="@photoDataUri" class="img-fluid img-thumbnail mx-auto d-block">
 
 @code{
-    [Inject] IJSRuntime jsr { get; init; }
+    [Inject] CameraInterop jsrCamera { get; init; }
 
     #region Resource
-    IJSObjectReference module;
-    DotNetObjectReference<Html5Camera> dotNetObject;
     ElementReference videoElement;
     #endregion
 
     #region State
     string photoDataUri = null;
     string message = null;
-    bool f_openCamera = false;
     #endregion
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        await base.OnAfterRenderAsync(firstRender);
-
-        // 動態載入 JS module
-        module = await jsr.InvokeAsync<IJSObjectReference>("import", "./tools/cameraTools.js");
-        dotNetObject = DotNetObjectReference.Create(this);
+        base.OnInitialized();
+        jsrCamera.OnCameraResponseEvnet += HandleCameraResponse;
     }
 
     async Task HandleStartCamera()
     {
-        f_openCamera = true;
-        await module.InvokeVoidAsync("startCamera", dotNetObject, videoElement);
+        await jsrCamera.StartCameraAsync(videoElement);
     }
 
     async Task HandleStopCamera()
     {
-        await module.InvokeVoidAsync("stopCamera", dotNetObject);
-        f_openCamera = false;
+        await jsrCamera.StopCameraAsync();
     }
 
     async Task HandleTakePhoto()
     {
-        await module.InvokeVoidAsync("takePhoto", dotNetObject);
+        await jsrCamera.TakePhotoAsync();
     }
 
-    [JSInvokable]
-    public Task<int> OnCameraResponse(string type, string _message)
+
+    void HandleCameraResponse(object sender, CameraInterop.CameraResponseEvnetArgs args)
     {
-        switch (type)
+        switch (args.type)
         {
             case "SUCCESS":
-                message = _message;
+                message = args.message;
                 break;
             case "STOP":
-                message = _message;
+                message = args.message;
                 break;
             case "PHOTO":
-                photoDataUri = _message;
-                module.InvokeVoidAsync("stopCamera", dotNetObject);
-                f_openCamera = false;
+                photoDataUri = args.message;
+                Task.Run(async () => {
+                    await jsrCamera.StopCameraAsync();
+                    StateHasChanged();
+                });
                 break;
             default:
-                message = _message;
+                message = args.message;
                 break;
         }
 
         StateHasChanged();
-        return Task.FromResult(0);
     }
 }

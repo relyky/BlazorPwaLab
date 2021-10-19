@@ -13,15 +13,22 @@ namespace MyBlazor.RazorComponent
 
     public class QrCodeInterop : IAsyncDisposable
     {
+        #region Resource
         private readonly Lazy<Task<IJSObjectReference>> moduleTask;
+
+        public event EventHandler<ScanResponseEvnetArgs> OnScanResponseEvnet;
+        public class ScanResponseEvnetArgs : EventArgs
+        {
+            public string type;
+            public string message;
+        }
+        #endregion
 
         public QrCodeInterop(IJSRuntime jsRuntime)
         {
             moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
                "import", "./_content/MyBlazor.RazorComponent/tools/qrcodeTools.js").AsTask());
         }
-
-        public event EventHandler<ScanResponseEvnetArgs> OnScanResponseEvnet;
 
         #region Dispose
         public async ValueTask DisposeAsync()
@@ -52,22 +59,16 @@ namespace MyBlazor.RazorComponent
             await module.InvokeVoidAsync("stopScan", DotNetObjectReference.Create(this));
         }
 
-        [JSInvokable]
-        public Task<int> OnScanResponse(string type, string message)
+        [JSInvokable("OnScanResponse")]
+        public Task<int> HandleScanResponse(string type, string message)
         {
-            OnScanResponseEvnet.Invoke(this, new ScanResponseEvnetArgs
+            OnScanResponseEvnet?.Invoke(this, new ScanResponseEvnetArgs
             {
                 type = type,
                 message = message
             });
 
             return Task.FromResult(0);
-        }
-
-        public class ScanResponseEvnetArgs : EventArgs
-        {
-            public string type;
-            public string message;
         }
     }
 }

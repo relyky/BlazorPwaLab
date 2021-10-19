@@ -19,6 +19,7 @@ namespace MyBlazorPwa
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<MyBlazor.RazorComponent.QrCodeInterop>();
+            builder.Services.AddScoped<MyBlazor.RazorComponent.CameraInterop>();
 
             await builder.Build().RunAsync();
         }
