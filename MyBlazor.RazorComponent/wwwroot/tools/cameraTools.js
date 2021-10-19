@@ -21,7 +21,7 @@ export function startCamera(dotNetObject, videoElement) {
   //startCamera
   cameraPhoto.startCameraMaxResolution(FACING_MODES.ENVIRONMENT, {})
     .then((stream) => {
-      console.log('Camera started.');
+      //console.log('Camera started.');
       dotNetObject.invokeMethodAsync('OnCameraResponse', 'SUCCESS', 'Camera started.');
     })
     .catch(err => {
@@ -36,18 +36,18 @@ export function takePhoto(dotNetObject) {
   const dataUri = cameraPhoto.getDataUri(config);
   beep();
 
-  console.info('Take a photo.', dataUri);
+  //console.info('Take a photo.', dataUri);
   dotNetObject.invokeMethodAsync('OnCameraResponse', 'PHOTO', dataUri);
 }
 
 export function stopCamera(dotNetObject) {
   cameraPhoto.stopCamera()
     .then(() => {
-      console.log('Camera stoped.');
+      //console.log('Camera stoped.');
       dotNetObject.invokeMethodAsync('OnCameraResponse', 'STOP', 'Camera stoped.');
     })
     .catch(err => {
-      console.log('Camera not stoped!', err);
+      console.error('Camera not stoped!', err);
       dotNetObject.invokeMethodAsync('OnCameraResponse', 'ERROR', 'Camera not stoped! ' + JSON.stringify(err));
     });
 }

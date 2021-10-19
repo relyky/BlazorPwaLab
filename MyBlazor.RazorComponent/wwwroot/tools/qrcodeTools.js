@@ -69,7 +69,7 @@ export function scanQrCode(dotNetObject, elementId, f_readStop) {
         qrbox: 250  // Optional if you want bounded box UI
       },
       qrCodeMessage => {
-        console.info('Code is read', qrCodeMessage);
+        //console.info('Code is read', qrCodeMessage);
 
         if (f_readStop) {
           html5QrCode.stop();
@@ -83,12 +83,12 @@ export function scanQrCode(dotNetObject, elementId, f_readStop) {
         dotNetObject.invokeMethodAsync('OnScanResponse', 'WARN', errorMessage);
       }
     ).catch(err => {
-      //console.error('Start failed, handle it.', err);
+      console.error('Start failed, handle it.', err);
       dotNetObject.invokeMethodAsync('OnScanResponse', 'ERROR', 'Start failed! ' + JSON.stringify(err));
     });
   }
   catch (err) {
-    // console.error('scanQrCode Exception!', err);
+    console.error('scanQrCode Exception!', err);
     dotNetObject.invokeMethodAsync('OnScanResponse', 'EXCEPTION', 'scanQrCode Exception! ' + JSON.stringify(err));
   }
 }
@@ -96,7 +96,7 @@ export function scanQrCode(dotNetObject, elementId, f_readStop) {
 /// 停止連續掃描 QR code
 export function stopScan(dotNetObject) {
   html5QrCode.stop().then((ignore) => {
-    console.log('QR Code scanning is stopped.', targetElementId);
+    // console.log('QR Code scanning is stopped.', targetElementId);
     dotNetObject.invokeMethodAsync('OnScanResponse', 'STOP', 'QR Code scanning is stopped.');
     document.getElementById(targetElementId).style.visibility = 'hidden';
   }).catch((err) => {
