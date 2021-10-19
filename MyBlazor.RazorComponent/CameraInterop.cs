@@ -30,7 +30,6 @@ namespace MyBlazor.RazorComponent
         public bool IsOpen { get; private set; } = false;
         #endregion
 
-
         public CameraInterop(IJSRuntime jsRuntime)
         {
             moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(

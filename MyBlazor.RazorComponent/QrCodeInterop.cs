@@ -14,7 +14,8 @@ namespace MyBlazor.RazorComponent
     public class QrCodeInterop : IAsyncDisposable
     {
         #region Resource
-        private readonly Lazy<Task<IJSObjectReference>> moduleTask;
+        readonly Lazy<Task<IJSObjectReference>> moduleTask;
+        readonly Lazy<DotNetObjectReference<QrCodeInterop>> dotNetObject;
 
         public event EventHandler<ScanResponseEvnetArgs> OnScanResponseEvnet;
         public class ScanResponseEvnetArgs : EventArgs
@@ -28,6 +29,8 @@ namespace MyBlazor.RazorComponent
         {
             moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
                "import", "./_content/MyBlazor.RazorComponent/tools/qrcodeTools.js").AsTask());
+
+            dotNetObject = new(DotNetObjectReference.Create(this));
         }
 
         #region Dispose
@@ -37,6 +40,11 @@ namespace MyBlazor.RazorComponent
             {
                 var module = await moduleTask.Value;
                 await module.DisposeAsync();
+            }
+
+            if (dotNetObject.IsValueCreated)
+            {
+                dotNetObject.Value.Dispose();
             }
         }
         #endregion
@@ -50,13 +58,13 @@ namespace MyBlazor.RazorComponent
         public async Task ScanQrCodeAsync(string elementId, bool f_readStop)
         {
             var module = await moduleTask.Value;
-            await module.InvokeVoidAsync("scanQrCode", DotNetObjectReference.Create(this), elementId, f_readStop);
+            await module.InvokeVoidAsync("scanQrCode", dotNetObject.Value, elementId, f_readStop);
         }
 
         public async Task StopScanAsync()
         {
             var module = await moduleTask.Value;
-            await module.InvokeVoidAsync("stopScan", DotNetObjectReference.Create(this));
+            await module.InvokeVoidAsync("stopScan", dotNetObject.Value);
         }
 
         [JSInvokable("OnScanResponse")]
