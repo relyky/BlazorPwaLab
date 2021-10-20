@@ -43,4 +43,21 @@ Welcome to your new app.
         }
     }
 
+    [JSInvokable("OnMachineResponse")]
+    public Task<int> HandleMachineResponse(string type, System.Text.Json.JsonElement result)
+    {
+        switch (type)
+        {
+            //case "Notice":
+            //    dataList = result.ToObject<List<FcmPushInfo>>();
+            //    break;
+            default:
+                message = $"type: {type}, {result.ToString()}";
+                break;
+        }
+
+        StateHasChanged();
+        return Task.FromResult(0);
+    }
+
 }

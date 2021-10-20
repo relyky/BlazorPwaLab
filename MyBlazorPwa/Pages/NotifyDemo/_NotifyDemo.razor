@@ -6,8 +6,22 @@
     <dd>@supportInfo.ToJson()</dd>
 </dl>
 <hr />
-<button class="btn btn-primary" @onclick="HandleNotify">通知自己</button>
+<button class="btn btn-primary" @onclick="HandleNotify">測試 Notification</button>
 <button class="btn btn-primary" @onclick="HandleQueryNotice">取出 Notice</button>
+
+<hr />
+<h4>訂閱</h4>
+<EditForm Model="userSubsAttrs">
+    <div class="form-group">
+        <label>vapidPublicKey</label>
+        <InputText class="form-control" @bind-Value="userSubsAttrs.vapidPublicKey" />
+    </div>
+    <div class="form-group">
+        <label>User Subscription API address</label>
+        <InputText class="form-control" @bind-Value="userSubsAttrs.userSubsApiUrl" />
+    </div>
+    <button class="btn btn-warning" @onclick="HandleSubscribe">訂閱</button>
+</EditForm>
 
 <hr />
 <h4>dataList</h4>
@@ -23,13 +37,20 @@
     #region Resource
     IJSObjectReference module;
     IJSObjectReference swModule;
+    DotNetObjectReference<_NotifyDemo> dotNetObject;
 
-    public class FcmPushInfo
+    class FcmPushInfo
     {
         public string title { get; set; }
         public string body { get; set; }
         public string url { get; set; }
         public string imageUrl { get; set; }
+    }
+
+    class UserSubsAttrs
+    {
+        public string vapidPublicKey { get; set; }
+        public string userSubsApiUrl { get; set; }
     }
 
     #endregion
@@ -39,7 +60,26 @@
     List<FcmPushInfo> dataList = null;
     string message = null;
     bool f_Loading = false;
+
+    UserSubscriptionInfo userSubs = new()
+    {
+        userCode = "beauty",
+        subscription = null
+    };
+
+    UserSubsAttrs userSubsAttrs = new()
+    {
+        vapidPublicKey = @"BJZ8ttN_7Vn2c4hJZ9FILZKnyKkCZxgPxnTYsZ4sWjEciRm7inZcC-4Dguq-6afpCiK6dwtZHWMgNvTbpWoklQc",
+        userSubsApiUrl = @"https://mywebpushserver.azurewebsites.net/api/UpdateUserSubscription"
+    };
+
     #endregion
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        dotNetObject = DotNetObjectReference.Create(this);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -75,7 +115,7 @@
             StateHasChanged();
             await Task.Delay(500); // 跑太快了拉長一點時間
 
-            await module.InvokeVoidAsync("SendNotification");
+            await swModule.InvokeVoidAsync("SendNotification");
             message = "SUCCESS";
         }
         catch (Exception ex)
@@ -89,36 +129,41 @@
         }
     }
 
-    async Task HandleAddNotice()
+    async Task HandleQueryNotice()
     {
-
-    }
-
-    void HandleQueryNotice()
-    {
-        module.InvokeVoidAsync("qryNotice", DotNetObjectReference.Create(this));
-    }
-
-    [JSInvokable]
-    public Task<int> OnQueryResponse(string dataType, System.Text.Json.JsonElement resultList)
-    {
-        switch (dataType)
+        try
         {
-            case "Notice":
-                dataList = resultList.ToObject<List<FcmPushInfo>>();
-                break;
-            default:
-                message = $"dataType: {dataType}, {resultList.ToString()}";
-                break;
+            dataList = await module.InvokeAsync<List<FcmPushInfo>>("qryNotice");
         }
-
-        StateHasChanged();
-        return Task.FromResult(0);
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
     }
 
-    async Task HandleClearAllNotice()
+    async Task HandleSubscribe()
     {
+        try
+        {
+            f_Loading = true;
+            message = "";
 
+            var subs = await swModule.InvokeAsync<UserSubscriptionInfo.PushSubscription>("subscribeUser", userSubsAttrs.vapidPublicKey);
+            userSubs.subscription = subs;
+
+            HttpClient client = new HttpClient();
+            var res = await client.CallWebApi2Async<UserSubscriptionInfo, ErrMsg>(userSubsAttrs.userSubsApiUrl, userSubs);
+
+            message = "subscribeUser SUCCESS";
+        }
+        catch (Exception ex)
+        {
+            message = $"[Exception:{ex.GetType().Name}] {ex.Message}";
+        }
+        finally
+        {
+            f_Loading = false;
+        }
     }
 
 }

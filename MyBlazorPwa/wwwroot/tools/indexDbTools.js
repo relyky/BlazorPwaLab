@@ -1,35 +1,72 @@
 ﻿
 const DB_NAME = "MyIndexDb";
 
-export function qryNotice(dotNetObject, args) {
-  const resultList = [];
+/// return resultList; // List<FcmPushInfo>
+export async function qryNotice(dotNetObject, args) {
+  return await Promise.resolve(new Promise((resolve, reject) => {
+    //#region 轉換成 Promise 形式以處理非同步計算。
 
-  const request = indexedDB.open(DB_NAME, 1);
+    const resultList = [];
+    const request = indexedDB.open(DB_NAME, 1);
 
-  request.onerror = function (event) {
-    console.error('open indexedDB fail!', event);
-  };
-
-  request.onupgradeneeded = HandleUpgradeNeeded;
-
-  request.onsuccess = function (event) {
-    const db = request.result;
-
-    const objectStore = db.transaction("Notice").objectStore("Notice");
-
-    objectStore.openCursor().onsuccess = function (event) {
-      var cursor = event.target.result;
-      if (cursor) {
-        resultList.push(cursor.value);
-        cursor.continue();
-      }
-      else {
-        console.log('Got all items', resultList);
-        dotNetObject.invokeMethodAsync('OnQueryResponse', 'Notice', resultList);
-      }
+    request.onerror = function (event) {
+      console.error('qryNotice FAIL! open indexedDB fail!', event);
+      reject('qryNotice FAIL! open indexedDB fail!');
     };
-  };
+
+    request.onupgradeneeded = HandleUpgradeNeeded;
+
+    request.onsuccess = function (event) {
+      const db = request.result;
+
+      const objectStore = db.transaction("Notice").objectStore("Notice");
+
+      objectStore.openCursor().onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (cursor) {
+          resultList.push(cursor.value);
+          cursor.continue();
+        }
+        else {
+          console.log('qryNotice SUCCESS.', resultList);
+          resolve(resultList);
+        }
+      };
+    };
+
+    //#endregion ------ 轉換成 Promise 形式以處理非同步計算。
+  }));
 }
+
+//export function qryNotice(dotNetObject, args) {
+//  const resultList = [];
+
+//  const request = indexedDB.open(DB_NAME, 1);
+
+//  request.onerror = function (event) {
+//    console.error('open indexedDB fail!', event);
+//  };
+
+//  request.onupgradeneeded = HandleUpgradeNeeded;
+
+//  request.onsuccess = function (event) {
+//    const db = request.result;
+
+//    const objectStore = db.transaction("Notice").objectStore("Notice");
+
+//    objectStore.openCursor().onsuccess = function (event) {
+//      var cursor = event.target.result;
+//      if (cursor) {
+//        resultList.push(cursor.value);
+//        cursor.continue();
+//      }
+//      else {
+//        console.log('Got all items', resultList);
+//        dotNetObject.invokeMethodAsync('OnQueryResponse', 'Notice', resultList);
+//      }
+//    };
+//  };
+//}
 
 //----------------------------------------------------------
 
@@ -50,7 +87,7 @@ const initDataList = [
 ];
 
 /// 資料庫昇級
-function HandleUpgradeNeeded (event) {
+function HandleUpgradeNeeded(event) {
   const db = event.target.result;
 
   // Create an objectStore to hold information about our customers. We're

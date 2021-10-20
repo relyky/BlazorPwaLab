@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -40,6 +42,29 @@ namespace MyBlazorPwa
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
             return document.RootElement.ToObject<T>(options);
+        }
+
+        /// <summary>
+        /// JSON package only.
+        /// </summary>
+        public static async Task<TRes> CallWebApi2Async<TReq, TRes>(this HttpClient http, string apiPath, TReq req)
+            where TReq : class
+            where TRes : class
+        {
+            //HttpClient http = new HttpClient();
+            //http.BaseAddress = new Uri(SysEnv.WebApi2BaseAddress); // 目標 Web API URL // 由環境取得
+            //http.DefaultRequestHeaders.Add("Authorization", @"Bearer xxxxxxxx"); // 認證機制 // 由環境取得
+
+            var response = await http.PostAsJsonAsync<TReq>(apiPath, req);
+            if (!response.IsSuccessStatusCode)
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(msg);
+            }
+
+            // success
+            var resp = await response.Content.ReadFromJsonAsync<TRes>();
+            return resp;
         }
     }
 }
