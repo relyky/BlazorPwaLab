@@ -1,63 +1,66 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<div class="container animate__animated animate__bounce">
+  <h1>Hello, world!</h1>
 
-Welcome to your new app.
+  Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+  <SurveyPrompt Title="How is Blazor working for you?" />
 
-<Component1 />
+  <Component1 />
 
 
-<input @bind="args" />
-<button @onclick="HandleClickMe">click me</button>
-<p>@message</p>
+  <input @bind="args" />
+  <button @onclick="HandleClickMe">click me</button>
+  <p>@message</p>
 
-@code{
-    [Inject] IJSRuntime jsr { get; init; }
+</div>
 
-    #region Resource
-    ExampleJsInterop exJsr;
-    #endregion
+@code {
+  [Inject] IJSRuntime jsr { get; init; }
 
-    #region State
-    string args = "我二秒後就出運了。";
-    string message = null;
-    #endregion
+  #region Resource
+  ExampleJsInterop exJsr;
+  #endregion
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+  #region State
+  string args = "我二秒後就出運了。";
+  string message = null;
+  #endregion
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    await base.OnAfterRenderAsync(firstRender);
+    exJsr = new ExampleJsInterop(jsr);
+  }
+
+  async Task HandleClickMe()
+  {
+    try
     {
-        await base.OnAfterRenderAsync(firstRender);
-        exJsr = new ExampleJsInterop(jsr);
+      message = await exJsr.CallPromise(args);
+    }
+    catch (Exception ex)
+    {
+      message = ex.Message;
+    }
+  }
+
+  [JSInvokable("OnMachineResponse")]
+  public Task<int> HandleMachineResponse(string type, System.Text.Json.JsonElement result)
+  {
+    switch (type)
+    {
+      //case "Notice":
+      //    dataList = result.ToObject<List<FcmPushInfo>>();
+      //    break;
+      default:
+        message = $"type: {type}, {result.ToString()}";
+        break;
     }
 
-    async Task HandleClickMe()
-    {
-        try
-        {
-            message = await exJsr.CallPromise(args);
-        }
-        catch (Exception ex)
-        {
-            message = ex.Message;
-        }
-    }
-
-    [JSInvokable("OnMachineResponse")]
-    public Task<int> HandleMachineResponse(string type, System.Text.Json.JsonElement result)
-    {
-        switch (type)
-        {
-            //case "Notice":
-            //    dataList = result.ToObject<List<FcmPushInfo>>();
-            //    break;
-            default:
-                message = $"type: {type}, {result.ToString()}";
-                break;
-        }
-
-        StateHasChanged();
-        return Task.FromResult(0);
-    }
+    StateHasChanged();
+    return Task.FromResult(0);
+  }
 
 }

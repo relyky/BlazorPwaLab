@@ -1,16 +1,19 @@
 @page "/counter"
 
-<h1>Counter</h1>
+<div class="container animate__animated animate__bounce">
+  <h1>Counter</h1>
 
-<p>Current count: @currentCount</p>
+  <p>Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+  <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+</div>
 
 @code {
-    private int currentCount = 0;
+  private int currentCount = 0;
 
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
+  private void IncrementCount()
+  {
+    currentCount++;
+  }
 }
